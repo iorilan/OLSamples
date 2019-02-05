@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Marker Animation</title>
+    <link rel="stylesheet" href="https://openlayers.org/en/v5.2.0/css/ol.css" type="text/css">
+    <!-- The line below is only needed for old environments like Internet Explorer and Android 4.x -->
+    <script src="https://cdn.polyfill.io/v2/polyfill.min.js?features=requestAnimationFrame,Element.prototype.classList,URL"></script>
+
+  </head>
+  <body>
+    <div id="map" class="map" ></div>
+    <label for="speed">
+      speed:&nbsp;
+      <input id="speed" type="range" min="10" max="999" step="10" value="60">
+    </label>
+    <button id="start-animation">Start Animation</button>
+    <script src="move-on-map.js">
+    </script>
+  </body>
+</html>

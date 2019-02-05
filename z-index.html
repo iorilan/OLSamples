@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Layer Z-Index</title>
+    <link rel="stylesheet" href="https://openlayers.org/en/v5.2.0/css/ol.css" type="text/css">
+    <!-- The line below is only needed for old environments like Internet Explorer and Android 4.x -->
+    <script src="https://cdn.polyfill.io/v2/polyfill.min.js?features=requestAnimationFrame,Element.prototype.classList,URL"></script>
+
+  </head>
+  <body>
+    <div id="map" class="map"></div>
+    <div>
+      <label for="idx1">
+        <input type="number" id="idx1"></input>
+        Square layer Z-index
+      </label></br>
+
+      <label for="idx2">
+        <input type="number" id="idx2"></input>
+        Triangle layer Z-index
+      </label>
+    </div>
+    <script src="z-index.js"></script>
+  </body>
+</html>

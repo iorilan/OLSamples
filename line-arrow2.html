@@ -1,0 +1,140 @@
+<html>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/ol3/3.4.0/ol.min.js"></script>
+
+<div id="mapDiv" style="width:100%;height:500px"></div>
+
+
+<script>
+var tileLayer = new ol.layer.Tile({
+    source: new ol.source.OSM()
+});
+
+var map = new ol.Map({
+    layers: [tileLayer],
+    view: new ol.View({
+        center: ol.proj.transform([77.444504, 22.795357], 'EPSG:4326', 'EPSG:3857'),
+        zoom: 5
+    }),
+    target: 'mapDiv'
+});
+
+var features = new Array();
+var coordinates = [[79.0900, 21.1500],[72.776714, 18.948932],[77.2090,28.6139],[85.1000,25.6000],[78.4800,17.3700]];
+var transformedCoordinates = new Array();
+
+for (var i = 0; i < coordinates.length; ++i) {
+    transformedCoordinates[i] = ol.proj.transform(coordinates[i], 'EPSG:4326', 'EPSG:3857');
+    features[i] = new ol.Feature(new ol.geom.Point(transformedCoordinates[i]));
+}
+
+var source = new ol.source.Vector({
+    features: features
+});
+
+var clusterSource = new ol.source.Cluster({
+    distance: 40,
+    source: source
+});
+
+var styleCache = {};
+var clusters = new ol.layer.Vector({
+    source: clusterSource,
+    style: function (feature, resolution) {
+        var size = feature.get('features').length;
+        var style = styleCache[size];
+        if (!style) {
+            style = [new ol.style.Style({
+                image: new ol.style.Circle({
+                    radius: 10,
+                    stroke: new ol.style.Stroke({
+                        color: '#fff'
+                    }),
+                    fill: new ol.style.Fill({
+                        color: '#3399CC'
+                    })
+                }),
+                text: new ol.style.Text({
+                    text: size.toString(),
+                    fill: new ol.style.Fill({
+                        color: '#fff'
+                    })
+                })
+            })];
+            styleCache[size] = style;
+        }
+        return style;
+    }
+});
+
+map.addLayer(clusters);
+
+var vectorLine = new ol.source.Vector({});
+
+for (var i = 1; i < transformedCoordinates.length; i++) {
+    var startPoint = transformedCoordinates[0];
+    var endPoint = transformedCoordinates[i];
+    var lineArray = [startPoint, endPoint];
+    var featureLine = new ol.Feature({
+        geometry: new ol.geom.LineString(lineArray)
+    });
+
+    var lineStyle = new ol.style.Style({
+        fill: new ol.style.Fill({
+            color: '#00FF00',
+            weight: 4
+        }),
+        stroke: new ol.style.Stroke({
+            color: '#00FF00',
+            width: 2
+        })
+    });
+    featureLine.setStyle(lineStyle);
+    vectorLine.addFeature(featureLine);
+    var firstPoint = coordinates[0];
+    var secondPoint = coordinates[i];
+    var slope = ((secondPoint[1] - firstPoint[1]) / (secondPoint[0] - firstPoint[0]));
+    var angle = Math.atan(slope);
+    var rotation;
+
+    //Shifting the graph Origin to point of start point
+    secondPoint[0] = secondPoint[0] - firstPoint[0];
+    secondPoint[1] = secondPoint[1] - firstPoint[1];
+    //Fourth quadrant
+    if (secondPoint[0] > 0 && secondPoint[1] < 0) {
+        rotation = (Math.PI / 2 - angle);
+    }
+    //Second quadrant
+    else if (secondPoint[0] < 0 && secondPoint[1] > 0) {
+        rotation = -(Math.PI / 2 + angle);
+    }
+    //Third quadrant
+    else if (secondPoint[0] < 0 && secondPoint[1] < 0) {
+        rotation = 3 * Math.PI / 2 - angle;
+    }
+    //First quadrant
+    else if (secondPoint[0] > 0 && secondPoint[1] > 0) {
+        rotation = angle;
+    }
+    var iconStyle = new ol.style.Style({
+        image: new ol.style.Icon(({
+            anchorXUnits: 'fraction',
+            anchorYUnits: 'pixels',
+            opacity: 0.75,
+            src: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAUCAYAAACNiR0NAAAAAXNSR0IArs4c6QAAAAlwSFlzAAALEwAACxMBAJqcGAAAAVlpVFh0WE1MOmNvbS5hZG9iZS54bXAAAAAAADx4OnhtcG1ldGEgeG1sbnM6eD0iYWRvYmU6bnM6bWV0YS8iIHg6eG1wdGs9IlhNUCBDb3JlIDUuNC4wIj4KICAgPHJkZjpSREYgeG1sbnM6cmRmPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5LzAyLzIyLXJkZi1zeW50YXgtbnMjIj4KICAgICAgPHJkZjpEZXNjcmlwdGlvbiByZGY6YWJvdXQ9IiIKICAgICAgICAgICAgeG1sbnM6dGlmZj0iaHR0cDovL25zLmFkb2JlLmNvbS90aWZmLzEuMC8iPgogICAgICAgICA8dGlmZjpPcmllbnRhdGlvbj4xPC90aWZmOk9yaWVudGF0aW9uPgogICAgICA8L3JkZjpEZXNjcmlwdGlvbj4KICAgPC9yZGY6UkRGPgo8L3g6eG1wbWV0YT4KTMInWQAAAdpJREFUOBGFVDtOA0EMnewGCS7ACeAYUIISEtpAxRGgRaLlFijiFkCAlgqJDokT0CAqJD7ZxLznsScT2GR35IzXnzdvbG9CWPZIKOhuS3u3lLKroWZbllbvyxIB9gB5TIGZL9kaFQltxoDdDsB8dTTPfI0YKUBCy3VA3SQ4Ke/cHrKYZFuoSFihD0AdBZtmv1L2NM9iFmIkR3YyYEYKJeUYO4XrPovVpqX3WmXGbs8ACDIx8Vrua24jy6x7APDa/UDnpSnUufJaLmFp3UNCzq5KcFJWBkjQvrHUafh/23p23wbgDAnktgaWM3bdjAVr52C+T9QSr+4d/8NyvrO3Buj1ciDfCeW+nGWa3YAh9bnrNbBzUDL35SwVowBYge9ibEU9sb1Se3wRbBMT6iTAzlaqhxBziKH2Gbt+OjN2kx3lMJOVL+q00Zd3PLHM2R3biV/KAV8edha7JUGeKNTNRh/ZfkL4xFy/KU7z2uW1oc4GHSJ1DbIK/QAyguTsfBLi/yXhEXAN8fWOD22Iv61t+uoe+LYQfQF5S1lSXmksDAMaCyleIGdgsjkHwhqz2FG0k8kvYQM5p5BnAx608HKOgNdpmF6iQh8aHOeS9atgi511lDofSlKE4ggh679ecGIXq+UAsgAAAABJRU5ErkJggg==',
+            rotation: rotation
+        }))
+    });
+    var iconFeature = new ol.Feature({
+        geometry: new ol.geom.Point(endPoint)
+    });
+    iconFeature.setStyle(iconStyle);
+    vectorLine.addFeature(iconFeature);
+}
+var vectorLayer = new ol.layer.Vector({
+    source: vectorLine
+});
+map.addLayer(vectorLayer);
+
+
+</script>
+</html>
